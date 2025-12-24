@@ -1,0 +1,11 @@
+com\skillswap\controller\UserController.class
+com\skillswap\DatabaseConnector.class
+com\skillswap\dao\SwapDao.class
+com\skillswap\model\User.class
+com\skillswap\SkillSwapApp$1.class
+com\skillswap\service\SwapService.class
+com\skillswap\SkillSwapApp.class
+com\skillswap\service\UserService.class
+com\skillswap\dao\UserDao.class
+com\skillswap\controller\SwapController.class
+com\skillswap\model\SwapRequest.class

@@ -1,4 +1,6 @@
-CREATE TABLE Users (
+USE skillswapdb;
+
+CREATE TABLE  IF NOT EXISTS Users (
     user_id INT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(100) NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
@@ -11,7 +13,7 @@ CREATE TABLE Users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE Skills (
+CREATE TABLE IF NOT EXISTS Skills (
     skill_id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT,
     skill_name VARCHAR(100) NOT NULL,
@@ -19,7 +21,7 @@ CREATE TABLE Skills (
     FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE
 );
 
-CREATE TABLE SwapRequests (
+CREATE TABLE IF NOT EXISTS SwapRequests (
     request_id INT PRIMARY KEY AUTO_INCREMENT,
     requester_id INT,
     receiver_id INT,
@@ -32,7 +34,7 @@ CREATE TABLE SwapRequests (
     FOREIGN KEY (receiver_id) REFERENCES Users(user_id)
 );
 
-CREATE TABLE Feedback (
+CREATE TABLE IF NOT EXISTS Feedback (
     feedback_id INT PRIMARY KEY AUTO_INCREMENT,
     swap_id INT,
     from_user_id INT,
@@ -45,14 +47,14 @@ CREATE TABLE Feedback (
     FOREIGN KEY (to_user_id) REFERENCES Users(user_id)
 );
 
-CREATE TABLE Admins (
+CREATE TABLE IF NOT EXISTS Admins (
     admin_id INT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(100) NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL
 );
 
-CREATE TABLE AdminActions (
+CREATE TABLE IF NOT EXISTS AdminActions (
     action_id INT PRIMARY KEY AUTO_INCREMENT,
     admin_id INT,
     action_type VARCHAR(100),

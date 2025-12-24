@@ -1,0 +1,144 @@
+# 🚀 SKILLSWAP - QUICK START CARD
+
+## In 5 Minutes: Get Everything Running
+
+```powershell
+# One command to start everything:
+cd c:\Users\HP\skillswapplat
+.\SETUP_AND_TEST.ps1
+
+# Wait 10 seconds, then open browser:
+# http://localhost:5500/api-test.html
+# → Click "Quick Populate" tab
+# → Click "Generate All Test Data"
+# DONE! 🎉
+```
+
+---
+
+## Manual Setup (If Preferred)
+
+**Terminal 1 - Backend:**
+```powershell
+cd c:\Users\HP\skillswapplat\backend\SSA
+$env:DB_URL="jdbc:mysql://localhost:3306/skillswapdb"
+$env:DB_USER="root"
+$env:DB_PASS=""
+java -jar target/skillswap-backend-1.0.0.jar
+```
+
+**Terminal 2 - Frontend:**
+```powershell
+cd c:\Users\HP\skillswapplat\frontend
+python -m http.server 5500
+```
+
+**Browser:**
+```
+http://localhost:5500
+```
+
+---
+
+## What URLs Do
+
+| URL | What It Does |
+|-----|--------------|
+| http://localhost:5500 | Landing page (start here) |
+| http://localhost:5500/register.html | Create new account |
+| http://localhost:5500/login.html | Sign in |
+| http://localhost:5500/profile.html | Your profile |
+| http://localhost:5500/Swap-request.html | Manage swaps |
+| http://localhost:5500/api-test.html | Test API + populate data |
+| http://localhost:8080/api/users | Backend API (users) |
+| http://localhost:8080/api/swaps | Backend API (swaps) |
+
+---
+
+## Test Credentials (Auto-Generated)
+
+```
+Email: alice@test.com
+Password: pass123
+(and 4 more test users: bob, carol, david, emma @test.com)
+```
+
+---
+
+## Common Issues
+
+| Issue | Fix |
+|-------|-----|
+| Port 8080 in use | Kill process or change port |
+| CORS errors | Check both servers running |
+| Page won't load | Use http:// not file://, check F12 |
+| Backend won't start | Check MySQL running |
+| API tester blank | Check backend responding |
+
+---
+
+## Files You Need
+
+```
+✅ Backend Ready:    target/skillswap-backend-1.0.0.jar
+✅ Frontend Ready:   frontend/api-client.js (core)
+✅ Documentation:    GETTING_STARTED.md (read first)
+```
+
+---
+
+## Documentation Files
+
+- **GETTING_STARTED.md** - Quick guide (read this!)
+- **FRONTEND_INTEGRATION.md** - Detailed setup
+- **ARCHITECTURE.md** - How it works
+- **README_COMPLETE.md** - Full reference
+- **INDEX.md** - Navigation guide
+
+---
+
+## Features Working
+
+✅ Register → Login → Profile → Create Swaps → Accept/Decline
+✅ Real-time user search
+✅ Session persistence
+✅ One-click test data generation
+✅ Professional API tester
+✅ Responsive design
+
+---
+
+## Next Steps
+
+1. **Start servers** (see above)
+2. **Generate test data** (api-test.html → Quick Populate)
+3. **Test registration** (Sign Up)
+4. **Test login** (Login with test account)
+5. **Create swaps** (Browse Swaps)
+6. **Accept/decline** (Test swap flow)
+
+---
+
+## Need Help?
+
+1. **Setup issues** → See GETTING_STARTED.md
+2. **API questions** → Check FRONTEND_INTEGRATION.md
+3. **Architecture** → Read ARCHITECTURE.md
+4. **All docs** → Check INDEX.md
+
+---
+
+## Key Endpoints
+
+```
+POST   /api/users/register     Create user
+POST   /api/users/login        Sign in
+GET    /api/users              List users
+POST   /api/swaps              Create swap
+GET    /api/swaps              List swaps
+POST   /api/swaps/{id}/accept  Accept swap
+```
+
+---
+
+**Everything is ready. Just run the setup script!** 🎉
