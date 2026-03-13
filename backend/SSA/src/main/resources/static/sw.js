@@ -1,5 +1,5 @@
 // SkillSwap Service Worker v1.0
-const CACHE_NAME = 'skillswap-v1';
+const CACHE_NAME = 'skillswap-v2';
 const OFFLINE_URL = '/offline.html';
 
 // Files to cache for offline use
@@ -104,4 +104,3 @@ self.addEventListener('notificationclick', (event) => {
     clients.openWindow(event.notification.data.url || '/')
   );
 });
-
