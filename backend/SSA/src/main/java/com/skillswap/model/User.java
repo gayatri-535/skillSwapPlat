@@ -9,4 +9,6 @@ public class User {
     public String availability;
     public Boolean isPublic;
     public Boolean isBanned;
+    public String resetToken;        // For password reset
+    public Long tokenExpiry;         // Token expiry timestamp (milliseconds)
 }

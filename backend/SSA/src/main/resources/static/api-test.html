@@ -182,6 +182,10 @@
     </style>
 </head>
 <body>
+    <nav style="background-color: #333; padding: 15px; text-align: center;">
+        <a href="index.html" style="color: white; text-decoration: none; padding: 10px 20px;">Home</a>
+    </nav>
+
     <div class="container">
         <h1>🔧 SkillSwap Backend API Tester</h1>
         
@@ -376,7 +380,23 @@ Content-Type: application/json
     </div>
 
     <script>
-        const API_BASE = 'http://localhost:8080/api';
+        const API_BASE = (() => {
+            const { protocol, hostname, port, origin } = window.location;
+
+            if (protocol === 'file:' || !hostname) {
+                return 'http://localhost:8080/api';
+            }
+            if (hostname === '10.0.2.2') {
+                return 'http://10.0.2.2:8080/api';
+            }
+
+            const normalizedHost = hostname.includes(':') ? `[${hostname}]` : hostname;
+            if (port === '5500' || port === '3000') {
+                return `http://${normalizedHost}:8080/api`;
+            }
+
+            return `${origin}/api`;
+        })();
 
         function switchTab(tabName) {
             document.querySelectorAll('.tabs-content').forEach(el => el.style.display = 'none');

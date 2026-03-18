@@ -1,0 +1,185 @@
+param([string]$Root = "C:\Users\HP\skillswapplat")
+$ErrorActionPreference = "Stop"
+
+function Backup-File([string]$Path) {
+  if (Test-Path $Path) {
+    $stamp = Get-Date -Format "yyyyMMdd_HHmmss"
+    Copy-Item $Path "$Path.$stamp.bak" -Force
+  } else {
+    throw "File not found: $Path"
+  }
+}
+
+function Replace-SignInFunction([string]$text) {
+$newFn = @'
+export async function signIn(email: string, password: string) {
+  const API_BASE = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
+  const url = API_BASE ? `${API_BASE}/api/auth/signin` : "/api/auth/signin";
+
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ email, password }),
+    });
+  } catch {
+    throw new Error("Cannot reach server. Check backend URL/port and CORS.");
+  }
+
+  const ct = res.headers.get("content-type") || "";
+  const data = ct.includes("application/json") ? await res.json() : await res.text();
+
+  if (!res.ok) {
+    throw new Error(typeof data === "string" ? data : data?.message || `HTTP ${res.status}`);
+  }
+
+  return data;
+}
+'@
+
+  $m = [regex]::Match($text, 'export\s+async\s+function\s+signIn\s*\(')
+  if (-not $m.Success) {
+    return ($text.TrimEnd() + "`r`n`r`n" + $newFn)
+  }
+
+  $start = $m.Index
+  $braceStart = $text.IndexOf('{', $m.Index)
+  if ($braceStart -lt 0) { return $text }
+
+  $depth = 0
+  $end = -1
+  for ($i = $braceStart; $i -lt $text.Length; $i++) {
+    if ($text[$i] -eq '{') { $depth++ }
+    elseif ($text[$i] -eq '}') {
+      $depth--
+      if ($depth -eq 0) { $end = $i; break }
+    }
+  }
+  if ($end -lt 0) { return $text }
+
+  return $text.Substring(0, $start) + $newFn + $text.Substring($end + 1)
+}
+
+$appPath  = Join-Path $Root "backend\src\app.js"
+$authPath = Join-Path $Root "frontend\src\api\auth.ts"
+$vitePath = Join-Path $Root "frontend\vite.config.ts"
+
+Backup-File $appPath
+Backup-File $authPath
+Backup-File $vitePath
+
+# backend app.js
+$app = Get-Content $appPath -Raw
+
+if ($app -notmatch 'import\s+cors\s+from\s+["'']cors["''];') {
+  $app = [regex]::Replace(
+    $app,
+    'import\s+express\s+from\s+["'']express["''];',
+    { param($m) $m.Value + "`r`nimport cors from `"cors`";" },
+    1
+  )
+}
+
+if ($app -notmatch 'app\.use\(\s*express\.json\(\)\s*\);') {
+  $app = [regex]::Replace(
+    $app,
+    'const\s+app\s*=\s*express\(\)\s*;',
+    { param($m) $m.Value + "`r`n`r`napp.use(express.json());" },
+    1
+  )
+}
+
+if ($app -notmatch 'allowedOrigins\s*=') {
+  $corsBlock = @'
+const allowedOrigins = ["http://localhost:5173", "http://127.0.0.1:5173"];
+app.use(
+  cors({
+    origin(origin, cb) {
+      if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
+      return cb(new Error("CORS blocked"));
+    },
+    credentials: true,
+  })
+);
+'@
+  if ($app -match 'app\.use\(\s*express\.json\(\)\s*\);') {
+    $app = [regex]::Replace(
+      $app,
+      'app\.use\(\s*express\.json\(\)\s*\);',
+      { param($m) $m.Value + "`r`n`r`n" + $corsBlock.TrimEnd() },
+      1
+    )
+  } else {
+    $app = $app.TrimEnd() + "`r`n`r`n" + $corsBlock.TrimEnd() + "`r`n"
+  }
+}
+
+if ($app -notmatch '/api/health') {
+  $app = $app.TrimEnd() + "`r`n`r`napp.get(""/api/health"", (_req, res) => res.status(200).json({ ok: true }));`r`n"
+}
+
+Set-Content $appPath $app -NoNewline
+
+# frontend auth.ts
+$auth = Get-Content $authPath -Raw
+$auth = Replace-SignInFunction $auth
+Set-Content $authPath $auth -NoNewline
+
+# vite.config.ts
+$vite = Get-Content $vitePath -Raw
+if ($vite -notmatch '/api' -and $vite -notmatch 'proxy\s*:') {
+  $vite = [regex]::Replace(
+    $vite,
+    'defineConfig\(\s*\{',
+    "defineConfig({`r`n  server: {`r`n    proxy: {`r`n      '/api': {`r`n        target: 'http://localhost:5000',`r`n        changeOrigin: true,`r`n        secure: false,`r`n      },`r`n    },`r`n  },",
+    1
+  )
+}
+Set-Content $vitePath $vite -NoNewline
+
+Write-Host "Patched files. Starting backend + frontend..."
+
+Start-Process powershell -ArgumentList "-NoExit","-Command","cd '$Root\backend'; npm run dev"
+Start-Process powershell -ArgumentList "-NoExit","-Command","cd '$Root\frontend'; npm run dev"
+
+Start-Sleep -Seconds 10
+
+try {
+  $h = Invoke-WebRequest -Uri "http://localhost:5000/api/health" -Method GET -TimeoutSec 15
+  Write-Host "Backend health OK (HTTP $($h.StatusCode))"
+} catch {
+  throw "Backend health failed: $($_.Exception.Message)"
+}
+
+$code = $null
+try {
+  $r = Invoke-WebRequest `
+    -Uri "http://localhost:5000/api/auth/signin" `
+    -Method POST `
+    -ContentType "application/json" `
+    -Body '{"email":"test@example.com","password":"wrong"}' `
+    -TimeoutSec 15
+  $code = [int]$r.StatusCode
+} catch {
+  if ($_.Exception.Response) {
+    $code = [int]$_.Exception.Response.StatusCode
+  } else {
+    throw "Sign-in check failed: $($_.Exception.Message)"
+  }
+}
+
+if ($code -eq 404) {
+  throw "Auth route 404. Ensure backend mounts: app.use('/api/auth', authRoutes)"
+}
+Write-Host "Sign-in endpoint reachable (HTTP $code)."
+
+try {
+  $p = Invoke-WebRequest -Uri "http://localhost:5173/api/health" -Method GET -TimeoutSec 15
+  Write-Host "Frontend proxy OK (HTTP $($p.StatusCode))"
+} catch {
+  Write-Warning "Proxy check failed (frontend may still be starting). Retry: curl.exe -i http://localhost:5173/api/health"
+}
+
+Write-Host "Done."

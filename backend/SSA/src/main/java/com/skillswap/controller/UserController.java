@@ -84,4 +84,63 @@ public class UserController {
         }
     }
 
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestParam String email) {
+        try {
+            if (email == null || email.isEmpty()) {
+                return ResponseEntity.badRequest().body("Email is required");
+            }
+            String resetToken = userService.initiatePasswordReset(email);
+            return ResponseEntity.ok(new java.util.HashMap<String, String>() {{
+                put("message", "Password reset token generated. Use this token to reset your password.");
+                put("token", resetToken);
+                put("reset_url", "http://localhost:8080/reset-password.html?token=" + resetToken);
+            }});
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/validate-reset-token")
+    public ResponseEntity<?> validateResetToken(@RequestParam String token) {
+        try {
+            if (token == null || token.isEmpty()) {
+                return ResponseEntity.badRequest().body("Token is required");
+            }
+            boolean isValid = userService.validateResetToken(token);
+            if (isValid) {
+                return ResponseEntity.ok(new java.util.HashMap<String, String>() {{
+                    put("message", "Token is valid");
+                }});
+            } else {
+                return ResponseEntity.status(400).body("Invalid or expired token");
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestParam String token, @RequestParam String newPassword) {
+        try {
+            if (token == null || token.isEmpty()) {
+                return ResponseEntity.badRequest().body("Token is required");
+            }
+            if (newPassword == null || newPassword.isEmpty()) {
+                return ResponseEntity.badRequest().body("New password is required");
+            }
+            if (newPassword.length() < 6) {
+                return ResponseEntity.badRequest().body("Password must be at least 6 characters long");
+            }
+            userService.resetPassword(token, newPassword);
+            return ResponseEntity.ok("Password reset successfully. Please log in with your new password.");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Reset error: " + e.getMessage());
+        }
+    }
+
 }

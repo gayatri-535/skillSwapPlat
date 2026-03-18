@@ -2,8 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Login - Skill Swap Platform</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#6200EE">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="SkillSwap">
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
     <link rel="stylesheet" href="css.css">
     <style>
         body {
@@ -73,6 +78,11 @@
     </style>
 </head>
 <body>
+    <nav style="background-color: #333; padding: 15px; text-align: center;">
+        <a href="index.html" style="color: white; text-decoration: none; padding: 10px 20px;">Home</a>
+        <a href="register.html" style="color: white; text-decoration: none; padding: 10px 20px;">Register</a>
+    </nav>
+
     <div class="container">
         <h2>Login to Skill Swap</h2>
         <form id="loginForm">
@@ -82,7 +92,7 @@
         </form>
         <div id="message"></div>
         <div class="link">
-            Don't have an account? <a href="register.html">Register here</a> | <a href="index.html">Back to Home</a>
+            Don't have an account? <a href="register.html">Register here</a> | <a href="forgot-password.html">Forgot Password?</a> | <a href="index.html">Back to Home</a>
         </div>
     </div>
 
@@ -115,6 +125,13 @@
         // If already logged in, redirect to profile
         if (SkillSwapAPI.isLoggedIn()) {
             window.location.href = 'profile.html';
+        }
+    </script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function () {
+                navigator.serviceWorker.register('/sw.js');
+            });
         }
     </script>
 </body>

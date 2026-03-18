@@ -64,4 +64,34 @@ public class UserDao {
         String sql = "UPDATE users SET name = ?, location = ?, availability = ?, is_public = ? WHERE user_id = ?";
         jdbcTemplate.update(sql, user.name, user.location, user.availability, user.isPublic, user.id);
     }
+
+    // Password reset methods
+    public void updateResetToken(String email, String token, long expiryTime) {
+        String sql = "UPDATE users SET reset_token = ?, token_expiry = ? WHERE email = ?";
+        jdbcTemplate.update(sql, token, expiryTime, email);
+    }
+
+    public User findByResetToken(String token) {
+        String sql = "SELECT user_id, name, email, password_hash, location, availability, is_public, is_banned, reset_token, token_expiry FROM users WHERE reset_token = ?";
+        List<User> users = jdbcTemplate.query(sql, (rs, rowNum) -> {
+            User user = new User();
+            user.id = rs.getInt("user_id");
+            user.name = rs.getString("name");
+            user.email = rs.getString("email");
+            user.password = rs.getString("password_hash");
+            user.location = rs.getString("location");
+            user.availability = rs.getString("availability");
+            user.isPublic = rs.getBoolean("is_public");
+            user.isBanned = rs.getBoolean("is_banned");
+            user.resetToken = rs.getString("reset_token");
+            user.tokenExpiry = rs.getLong("token_expiry");
+            return user;
+        }, token);
+        return users.isEmpty() ? null : users.get(0);
+    }
+
+    public void updatePassword(String email, String newPasswordHash) {
+        String sql = "UPDATE users SET password_hash = ?, reset_token = NULL, token_expiry = NULL WHERE email = ?";
+        jdbcTemplate.update(sql, newPasswordHash, email);
+    }
 }

@@ -11,6 +11,7 @@
     <meta name="apple-mobile-web-app-title" content="SkillSwap">
     <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
     <link rel="stylesheet" href="css.css">
+    <script src="theme.js"></script>
     <style>
         * {
             margin: 0;
@@ -20,13 +21,16 @@
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             line-height: 1.6;
-            color: #333;
+            color: var(--text-primary);
+            background-color: var(--bg-secondary);
+            transition: background-color 0.3s, color 0.3s;
         }
         header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: var(--header-bg);
             color: white;
             padding: 20px 0;
             text-align: center;
+            transition: background 0.3s;
         }
         header h1 {
             font-size: 2.5em;
@@ -37,9 +41,13 @@
             opacity: 0.9;
         }
         nav {
-            background-color: #333;
+            background-color: var(--nav-bg);
             padding: 15px;
             text-align: center;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background-color 0.3s;
         }
         nav a {
             color: white;
@@ -51,7 +59,20 @@
             transition: background 0.3s;
         }
         nav a:hover {
-            background-color: #4CAF50;
+            background-color: var(--button-color);
+        }
+        #themeToggle {
+            margin-left: auto;
+            background-color: var(--button-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        #themeToggle:hover {
+            background-color: var(--button-hover);
         }
         .container {
             max-width: 1200px;
@@ -65,11 +86,11 @@
         .hero h2 {
             font-size: 2em;
             margin-bottom: 20px;
-            color: #333;
+            color: var(--text-primary);
         }
         .hero p {
             font-size: 1.1em;
-            color: #666;
+            color: var(--text-secondary);
             margin-bottom: 30px;
             max-width: 600px;
             margin-left: auto;
@@ -92,11 +113,11 @@
             transition: transform 0.2s;
         }
         .btn-primary {
-            background-color: #4CAF50;
+            background-color: var(--button-color);
             color: white;
         }
         .btn-primary:hover {
-            background-color: #45a049;
+            background-color: var(--button-hover);
             transform: translateY(-2px);
         }
         .btn-secondary {
@@ -114,26 +135,28 @@
             margin: 60px 0;
         }
         .feature-card {
-            background: white;
+            background: var(--bg-primary);
             padding: 30px;
             border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 10px var(--shadow-color);
             text-align: center;
+            transition: background-color 0.3s, box-shadow 0.3s;
         }
         .feature-card h3 {
-            color: #667eea;
+            color: var(--button-color);
             margin-bottom: 15px;
             font-size: 1.5em;
         }
         .feature-card p {
-            color: #666;
+            color: var(--text-secondary);
             line-height: 1.8;
         }
         .how-it-works {
-            background: #f9f9f9;
+            background: var(--bg-primary);
             padding: 40px;
             border-radius: 8px;
             margin: 40px 0;
+            transition: background-color 0.3s;
         }
         .how-it-works h3 {
             text-align: center;
@@ -146,24 +169,26 @@
             gap: 20px;
         }
         .step {
-            background: white;
+            background: var(--bg-secondary);
             padding: 20px;
             border-radius: 4px;
             text-align: center;
-            border-top: 4px solid #667eea;
+            border-top: 4px solid var(--button-color);
+            transition: background-color 0.3s;
         }
         .step-number {
             font-size: 2em;
-            color: #667eea;
+            color: var(--button-color);
             font-weight: bold;
             margin-bottom: 10px;
         }
         footer {
-            background-color: #333;
+            background-color: var(--nav-bg);
             color: white;
             text-align: center;
             padding: 20px;
             margin-top: 60px;
+            transition: background-color 0.3s;
         }
     </style>
 </head>
@@ -178,6 +203,7 @@
         <a href="#features">Features</a>
         <a href="#how-it-works">How It Works</a>
         <span id="navLinks"></span>
+        <button id="themeToggle"></button>
     </nav>
     
 

@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="skillswap-backend-1.0.0">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/backend/SSA/target/skillswap-backend-1.0.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

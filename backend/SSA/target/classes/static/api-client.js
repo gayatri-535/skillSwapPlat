@@ -1,8 +1,26 @@
 // SkillSwap API Client
-// Auto-detect host: Android emulator uses 10.0.2.2, browser uses localhost
-const API_BASE_URL = (window.location.hostname === '10.0.2.2')
-    ? 'http://10.0.2.2:8080/api'
-    : 'http://localhost:8080/api';
+// Resolve API base URL for common local/dev environments.
+const API_BASE_URL = (() => {
+    const { protocol, hostname, port, origin } = window.location;
+
+    if (protocol === 'file:' || !hostname) {
+        return 'http://localhost:8080/api';
+    }
+
+    if (hostname === '10.0.2.2') {
+        return 'http://10.0.2.2:8080/api';
+    }
+
+    const normalizedHost = hostname.includes(':') ? `[${hostname}]` : hostname;
+
+    // Static local servers (python live-server/vite) call backend on 8080.
+    if (port === '5500' || port === '3000') {
+        return `http://${normalizedHost}:8080/api`;
+    }
+
+    // Default to same-origin API when served by backend/proxy.
+    return `${origin}/api`;
+})();
 
 // Session storage for current user
 const sessionStorage_user = {
@@ -218,5 +236,4 @@ function showLoading(elementId, show = true) {
         element.textContent = show ? 'Loading...' : '';
     }
 }
-
 

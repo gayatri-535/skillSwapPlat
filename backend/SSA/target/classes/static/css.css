@@ -5,21 +5,53 @@
     box-sizing: border-box;
 }
 
+/* Light Theme (Default) */
+:root {
+    --bg-primary: #ffffff;
+    --bg-secondary: #f5f5f5;
+    --text-primary: #333;
+    --text-secondary: #666;
+    --border-color: #ddd;
+    --shadow-color: rgba(0, 0, 0, 0.1);
+    --header-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --nav-bg: #333;
+    --button-color: #4CAF50;
+    --button-hover: #45a049;
+    --input-focus: rgba(76, 175, 80, 0.3);
+}
+
+/* Dark Theme */
+[data-theme="dark"] {
+    --bg-primary: #1e1e1e;
+    --bg-secondary: #2d2d2d;
+    --text-primary: #e0e0e0;
+    --text-secondary: #b0b0b0;
+    --border-color: #444;
+    --shadow-color: rgba(0, 0, 0, 0.5);
+    --header-bg: linear-gradient(135deg, #4a5080 0%, #5a3a6a 100%);
+    --nav-bg: #1a1a1a;
+    --button-color: #5cb85c;
+    --button-hover: #4cae4c;
+    --input-focus: rgba(92, 184, 92, 0.3);
+}
+
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     padding: 0;
-    background-color: #f5f5f5;
-    color: #333;
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
     line-height: 1.6;
+    transition: background-color 0.3s, color 0.3s;
 }
 
 /* Header Styles */
 header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--header-bg);
     color: white;
     padding: 30px 0;
     text-align: center;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 5px var(--shadow-color);
+    transition: background 0.3s;
 }
 
 header h1 {
@@ -34,13 +66,17 @@ header p {
 
 /* Navigation */
 nav {
-    background-color: #333;
+    background-color: var(--nav-bg);
     padding: 15px;
     text-align: center;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 5px var(--shadow-color);
+    transition: background-color 0.3s;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
-nav a {
+nav a, #themeToggle {
     color: white;
     text-decoration: none;
     padding: 10px 20px;
@@ -48,17 +84,26 @@ nav a {
     display: inline-block;
     border-radius: 4px;
     transition: background 0.3s;
+    cursor: pointer;
+    border: none;
+    background-color: transparent;
+    font-size: 14px;
 }
 
-nav a:hover {
-    background-color: #4CAF50;
+nav a:hover, #themeToggle:hover {
+    background-color: var(--button-color);
+}
+
+#themeToggle {
+    margin-left: auto;
+    background-color: var(--button-color);
 }
 
 /* Buttons */
 button, .btn {
     margin: 8px 0;
     padding: 12px 20px;
-    background-color: #4CAF50;
+    background-color: var(--button-color);
     color: white;
     border: none;
     cursor: pointer;
@@ -68,7 +113,7 @@ button, .btn {
 }
 
 button:hover, .btn:hover {
-    background-color: #45a049;
+    background-color: var(--button-hover);
     transform: translateY(-2px);
 }
 
@@ -76,17 +121,20 @@ button:hover, .btn:hover {
 input, textarea, select {
     margin: 8px 0;
     padding: 12px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--border-color);
     border-radius: 4px;
     font-size: 14px;
     font-family: Arial, sans-serif;
     width: 100%;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    transition: background-color 0.3s, color 0.3s, border-color 0.3s;
 }
 
 input:focus, textarea:focus, select:focus {
     outline: none;
-    border-color: #4CAF50;
-    box-shadow: 0 0 5px rgba(76, 175, 80, 0.3);
+    border-color: var(--button-color);
+    box-shadow: 0 0 5px var(--input-focus);
 }
 
 /* Messages */
@@ -94,7 +142,8 @@ input:focus, textarea:focus, select:focus {
     margin: 15px 0;
     padding: 15px;
     border-radius: 4px;
-    border-left: 4px solid #4CAF50;
+    border-left: 4px solid var(--button-color);
+    transition: background-color 0.3s, color 0.3s;
 }
 
 .success {
@@ -103,19 +152,30 @@ input:focus, textarea:focus, select:focus {
     border-left-color: #28a745;
 }
 
+[data-theme="dark"] .success {
+    background-color: #1e4620;
+    color: #90ee90;
+}
+
 .error {
     background-color: #f8d7da;
     color: #721c24;
     border-left-color: #f5c6cb;
 }
 
+[data-theme="dark"] .error {
+    background-color: #4a1f1f;
+    color: #ff6b6b;
+}
+
 /* Cards */
 .card, .swap-card, .feature-card {
-    background: white;
+    background: var(--bg-primary);
     padding: 20px;
     margin: 15px 0;
     border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 10px var(--shadow-color);
+    transition: background-color 0.3s, box-shadow 0.3s;
 }
 
 .swap-card {
@@ -131,9 +191,10 @@ input:focus, textarea:focus, select:focus {
 
 /* Footer */
 footer {
-    background-color: #333;
+    background-color: var(--nav-bg);
     color: white;
     text-align: center;
     padding: 20px;
     margin-top: 60px;
+    transition: background-color 0.3s;
 }
