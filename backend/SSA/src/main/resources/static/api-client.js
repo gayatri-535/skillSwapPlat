@@ -43,6 +43,9 @@ function isPrivateOrLocalHost(hostname) {
         || /^172\.(1[6-9]|2\d|3[0-1])\./.test(hostname);
 }
 
+// Production backend used by the deployed Vercel/PWA frontend.
+const DEPLOYED_BACKEND_BASE = 'https://skillswapplat.onrender.com';
+
 const API_BASE_CANDIDATES = (() => {
     const { protocol, hostname, port, origin } = window.location;
     const candidates = [];
@@ -57,6 +60,11 @@ const API_BASE_CANDIDATES = (() => {
     const override = getApiBaseOverride();
     if (override) {
         addCandidate(override);
+    }
+
+    // When running from a public host (Vercel/custom domain), prefer deployed backend.
+    if (hostname && !isPrivateOrLocalHost(hostname) && hostname !== '10.0.2.2') {
+        addCandidate(DEPLOYED_BACKEND_BASE);
     }
 
     if (protocol === 'file:' || !hostname) {
