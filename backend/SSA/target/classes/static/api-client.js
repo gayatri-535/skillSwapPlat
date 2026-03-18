@@ -1,26 +1,131 @@
 // SkillSwap API Client
-// Resolve API base URL for common local/dev environments.
-const API_BASE_URL = (() => {
+// Resolve API base URL with fallback candidates for local/mobile/dev setups.
+function normalizeApiBaseUrl(value) {
+    if (!value) {
+        return null;
+    }
+
+    const trimmed = String(value).trim().replace(/\/+$/, '');
+    if (!trimmed) {
+        return null;
+    }
+
+    return trimmed.endsWith('/api') ? trimmed : `${trimmed}/api`;
+}
+
+function getApiBaseOverride() {
+    try {
+        const params = new URLSearchParams(window.location.search);
+        const queryOverride = params.get('apiBase');
+        if (queryOverride) {
+            localStorage.setItem('skillswap_api_base', queryOverride);
+            return queryOverride;
+        }
+        return localStorage.getItem('skillswap_api_base');
+    } catch (e) {
+        return null;
+    }
+}
+
+function normalizeHostForUrl(hostname) {
+    return hostname.includes(':') && !hostname.startsWith('[')
+        ? `[${hostname}]`
+        : hostname;
+}
+
+function isPrivateOrLocalHost(hostname) {
+    return hostname === 'localhost'
+        || hostname === '127.0.0.1'
+        || hostname === '::1'
+        || hostname === '[::1]'
+        || /^10\./.test(hostname)
+        || /^192\.168\./.test(hostname)
+        || /^172\.(1[6-9]|2\d|3[0-1])\./.test(hostname);
+}
+
+const API_BASE_CANDIDATES = (() => {
     const { protocol, hostname, port, origin } = window.location;
+    const candidates = [];
+
+    const addCandidate = (value) => {
+        const normalized = normalizeApiBaseUrl(value);
+        if (normalized && !candidates.includes(normalized)) {
+            candidates.push(normalized);
+        }
+    };
+
+    const override = getApiBaseOverride();
+    if (override) {
+        addCandidate(override);
+    }
 
     if (protocol === 'file:' || !hostname) {
-        return 'http://localhost:8080/api';
+        addCandidate('http://localhost:8080');
+        addCandidate('http://127.0.0.1:8080');
+        return candidates;
     }
 
     if (hostname === '10.0.2.2') {
-        return 'http://10.0.2.2:8080/api';
+        addCandidate('http://10.0.2.2:8080');
     }
 
-    const normalizedHost = hostname.includes(':') ? `[${hostname}]` : hostname;
+    const normalizedHost = normalizeHostForUrl(hostname);
+    const sameHost8080 = `${protocol}//${normalizedHost}:8080`;
 
-    // Static local servers (python live-server/vite) call backend on 8080.
-    if (port === '5500' || port === '3000') {
-        return `http://${normalizedHost}:8080/api`;
+    // Default same-origin API first.
+    addCandidate(origin);
+
+    // If frontend runs on any non-8080 port, try backend on same host:8080.
+    if (port && port !== '8080') {
+        addCandidate(sameHost8080);
     }
 
-    // Default to same-origin API when served by backend/proxy.
-    return `${origin}/api`;
+    // If opened from a local/private host without explicit port, keep 8080 fallback.
+    if (!port && isPrivateOrLocalHost(hostname)) {
+        addCandidate(sameHost8080);
+    }
+
+    // Last-resort local machine fallbacks.
+    addCandidate('http://localhost:8080');
+    addCandidate('http://127.0.0.1:8080');
+
+    return candidates;
 })();
+
+const API_BASE_URL = API_BASE_CANDIDATES[0];
+
+async function apiFetch(path, options = {}) {
+    const endpointPath = path.startsWith('/') ? path : `/${path}`;
+    let lastError = null;
+
+    for (let i = 0; i < API_BASE_CANDIDATES.length; i++) {
+        const base = API_BASE_CANDIDATES[i];
+        try {
+            const response = await fetch(`${base}${endpointPath}`, options);
+
+            const contentType = (response.headers.get('content-type') || '').toLowerCase();
+            const shouldFallback = (
+                i < API_BASE_CANDIDATES.length - 1
+                && response.status === 404
+                && contentType.includes('text/html')
+            );
+
+            if (shouldFallback) {
+                continue;
+            }
+
+            return response;
+        } catch (error) {
+            lastError = error;
+        }
+    }
+
+    if (lastError) {
+        throw lastError;
+    }
+
+    throw new Error('Unable to reach SkillSwap API');
+}
 
 // Session storage for current user
 const sessionStorage_user = {
@@ -44,7 +149,7 @@ const sessionStorage_user = {
 class SkillSwapAPI {
     static async register(userData) {
         try {
-            const response = await fetch(`${API_BASE_URL}/users/register`, {
+            const response = await apiFetch('/users/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(userData)
@@ -63,7 +168,7 @@ class SkillSwapAPI {
 
     static async login(email, password) {
         try {
-            const response = await fetch(`${API_BASE_URL}/users/login?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`, {
+            const response = await apiFetch(`/users/login?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' }
             });
@@ -87,7 +192,7 @@ class SkillSwapAPI {
 
     static async listUsers() {
         try {
-            const response = await fetch(`${API_BASE_URL}/users`, {
+            const response = await apiFetch('/users', {
                 method: 'GET',
                 headers: { 'Content-Type': 'application/json' }
             });
@@ -104,7 +209,7 @@ class SkillSwapAPI {
 
     static async getUserByEmail(email) {
         try {
-            const response = await fetch(`${API_BASE_URL}/users/${encodeURIComponent(email)}`, {
+            const response = await apiFetch(`/users/${encodeURIComponent(email)}`, {
                 method: 'GET',
                 headers: { 'Content-Type': 'application/json' }
             });
@@ -121,7 +226,7 @@ class SkillSwapAPI {
 
     static async createSwap(requesterId, receiverId, requestedSkill, offeredSkill) {
         try {
-            const response = await fetch(`${API_BASE_URL}/swaps`, {
+            const response = await apiFetch('/swaps', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -145,7 +250,7 @@ class SkillSwapAPI {
 
     static async listSwaps() {
         try {
-            const response = await fetch(`${API_BASE_URL}/swaps`, {
+            const response = await apiFetch('/swaps', {
                 method: 'GET',
                 headers: { 'Content-Type': 'application/json' }
             });
@@ -162,7 +267,7 @@ class SkillSwapAPI {
 
     static async listUserSwaps(userId) {
         try {
-            const response = await fetch(`${API_BASE_URL}/swaps/user/${userId}`, {
+            const response = await apiFetch(`/swaps/user/${userId}`, {
                 method: 'GET',
                 headers: { 'Content-Type': 'application/json' }
             });
@@ -179,7 +284,7 @@ class SkillSwapAPI {
 
     static async acceptSwap(swapId) {
         try {
-            const response = await fetch(`${API_BASE_URL}/swaps/${swapId}/accept`, {
+            const response = await apiFetch(`/swaps/${swapId}/accept`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' }
             });
@@ -196,7 +301,7 @@ class SkillSwapAPI {
 
     static async cancelSwap(swapId) {
         try {
-            const response = await fetch(`${API_BASE_URL}/swaps/${swapId}/cancel`, {
+            const response = await apiFetch(`/swaps/${swapId}/cancel`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' }
             });

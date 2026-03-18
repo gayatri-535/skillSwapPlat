@@ -152,7 +152,16 @@
             } else {
                 const messageEl = document.getElementById('message');
                 messageEl.className = 'message error';
-                messageEl.textContent = result.message || result.error || 'Registration failed. Please try again.';
+
+                const rawMessage = result.message || result.error || '';
+                const looksLikeWrongServer = typeof rawMessage === 'string'
+                    && /not_found|page could not be found/i.test(rawMessage);
+
+                if (looksLikeWrongServer) {
+                    messageEl.textContent = 'Cannot reach SkillSwap backend API from this page. Open the app from http://localhost:8080 (or your PC IP on port 8080).';
+                } else {
+                    messageEl.textContent = rawMessage || 'Registration failed. Please try again.';
+                }
             }
         });
 
