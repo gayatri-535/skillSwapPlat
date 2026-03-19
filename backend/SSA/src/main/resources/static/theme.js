@@ -58,7 +58,10 @@ class ThemeManager {
         const toggleBtn = document.getElementById('themeToggle');
         if (toggleBtn) {
             const theme = this.getCurrentTheme();
-            toggleBtn.textContent = theme === 'dark' ? '☀️ Light' : '🌙 Dark';
+            const isMobile = window.matchMedia('(max-width: 720px)').matches;
+            toggleBtn.textContent = isMobile
+                ? (theme === 'dark' ? '☀️' : '🌙')
+                : (theme === 'dark' ? '☀️ Light' : '🌙 Dark');
             toggleBtn.title = `Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Theme`;
         }
     }
@@ -75,6 +78,11 @@ document.addEventListener('DOMContentLoaded', function() {
             themeManager.toggle();
             themeManager.updateToggleButton();
         });
+
+        window.addEventListener('resize', function() {
+            themeManager.updateToggleButton();
+        });
+
         themeManager.updateToggleButton();
     }
 });

@@ -1,5 +1,5 @@
 // SkillSwap Service Worker v1.2
-const CACHE_NAME = 'skillswap-v4';
+const CACHE_NAME = 'skillswap-v5';
 const OFFLINE_URL = '/offline.html';
 
 // Files to cache for offline use
