@@ -50,22 +50,39 @@
             align-items: center;
             gap: 10px 12px;
             transition: background-color 0.3s;
+            position: relative;
         }
 
         .nav-group {
             display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
             align-items: center;
             gap: 10px;
+            min-width: 0;
         }
 
         .nav-group--primary {
-            flex: 1 1 420px;
+            flex: 1 1 auto;
+            flex-wrap: nowrap;
+            justify-content: center;
+            overflow-x: auto;
+            white-space: nowrap;
+            padding-bottom: 2px;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        .nav-group--primary::-webkit-scrollbar {
+            display: none;
         }
 
         .nav-group--secondary {
-            flex: 1 1 260px;
+            flex: 0 1 auto;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .nav-group--secondary:empty {
+            display: none;
         }
 
         nav a {
@@ -79,6 +96,7 @@
             border-radius: 10px;
             border: 1px solid transparent;
             min-height: 42px;
+            flex: 0 0 auto;
             transition: background 0.3s, transform 0.3s, border-color 0.3s;
         }
         nav a:hover {
@@ -87,6 +105,9 @@
             transform: translateY(-1px);
         }
         #themeToggle {
+            position: fixed;
+            top: max(10px, calc(env(safe-area-inset-top) + 4px));
+            right: max(10px, env(safe-area-inset-right));
             margin-left: 0;
             background-color: var(--button-color);
             color: white;
@@ -96,6 +117,8 @@
             min-height: 42px;
             min-width: 130px;
             cursor: pointer;
+            z-index: 1200;
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.24);
             transition: background-color 0.3s;
         }
         #themeToggle:hover {
@@ -103,32 +126,177 @@
         }
 
         @media (max-width: 720px) {
+            body {
+                padding-bottom: calc(96px + env(safe-area-inset-bottom));
+            }
+
+            header {
+                padding: 18px 12px 14px;
+            }
+
+            header h1 {
+                font-size: 1.6em;
+                margin-bottom: 4px;
+            }
+
+            header p {
+                font-size: 0.95em;
+            }
+
+            #themeToggle {
+                top: max(8px, calc(env(safe-area-inset-top) + 4px));
+                right: max(8px, env(safe-area-inset-right));
+                min-width: 96px;
+                min-height: 38px;
+                padding: 8px 10px;
+                font-size: 0.78rem;
+                border-radius: 999px;
+                box-shadow: 0 10px 18px rgba(0, 0, 0, 0.2);
+            }
+
             nav {
-                padding: 12px 10px;
-                gap: 10px;
+                position: fixed;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                z-index: 1100;
+                padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
+                gap: 6px;
+                justify-content: center;
+                border-top: 1px solid rgba(255, 255, 255, 0.24);
+                box-shadow: 0 -10px 24px rgba(0, 0, 0, 0.22);
             }
 
-            .nav-group--primary,
+            .nav-group--primary {
+                flex: 1 1 auto;
+                justify-content: space-between;
+                overflow: visible;
+                padding-bottom: 0;
+                gap: 6px;
+            }
+
+            .nav-group--primary a {
+                flex: 1 1 0;
+                min-width: 0;
+            }
+
             .nav-group--secondary {
-                width: min(100%, 420px);
-                flex: 1 1 100%;
-                display: grid;
-                grid-template-columns: repeat(2, minmax(120px, 1fr));
+                position: fixed;
+                left: 10px;
+                right: 10px;
+                bottom: calc(72px + env(safe-area-inset-bottom));
+                flex-wrap: nowrap;
+                justify-content: flex-start;
+                overflow-x: auto;
+                white-space: nowrap;
+                gap: 8px;
+                padding: 8px;
+                border-radius: 14px;
+                background: var(--bg-primary);
+                border: 1px solid var(--border-color);
+                box-shadow: 0 12px 20px var(--shadow-color);
+                scrollbar-width: none;
+                -ms-overflow-style: none;
+            }
+
+            .nav-group--secondary::-webkit-scrollbar {
+                display: none;
+            }
+
+            nav a {
+                padding: 8px 10px;
+                font-size: 0.82rem;
+                min-height: 38px;
+                border-radius: 10px;
+            }
+
+            .nav-group--primary a {
+                background-color: rgba(255, 255, 255, 0.15);
+                border-color: rgba(255, 255, 255, 0.24);
+            }
+
+            .nav-group--secondary a {
+                color: var(--text-primary);
+                background-color: var(--bg-secondary);
+                border-color: var(--border-color);
+            }
+
+            .container {
+                margin: 20px auto 0;
+                padding: 14px 12px 124px;
+            }
+
+            .hero {
+                margin: 18px 0 24px;
+                padding: 28px 16px;
+                border-radius: 16px;
+            }
+
+            .hero h2 {
+                font-size: 1.55em;
+            }
+
+            .hero p {
+                font-size: 0.96em;
+                margin-bottom: 20px;
+            }
+
+            .cta-buttons {
+                flex-direction: column;
                 gap: 10px;
             }
 
-            .nav-group--primary a:last-child {
-                grid-column: 1 / -1;
-            }
-
-            nav a,
-            #themeToggle {
+            .cta-buttons .btn {
                 width: 100%;
-                margin: 0;
+                padding: 12px 18px;
+                font-size: 1rem;
+                text-align: center;
             }
 
-            #themeToggle {
-                width: min(100%, 420px);
+            .features {
+                grid-template-columns: 1fr;
+                gap: 14px;
+                margin: 24px 0;
+            }
+
+            .feature-card {
+                padding: 20px 16px;
+                text-align: left;
+            }
+
+            .feature-card h3 {
+                font-size: 1.25em;
+            }
+
+            .how-it-works {
+                margin: 20px 0 16px;
+                padding: 24px 16px;
+            }
+
+            .how-it-works h3 {
+                font-size: 1.45em;
+                margin-bottom: 18px;
+            }
+
+            .steps {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+
+            .step {
+                text-align: left;
+                padding: 16px;
+            }
+
+            .step-number {
+                font-size: 1.6em;
+                margin-bottom: 6px;
+            }
+
+            footer {
+                margin-top: 12px;
+                padding: 14px 12px calc(14px + env(safe-area-inset-bottom));
+                font-size: 0.9em;
             }
         }
         .container {
@@ -338,7 +506,7 @@
     </div>
 
     <footer>
-        <p>&copy; 2025 Skill Swap Platform. All rights reserved.</p>
+        <p>&copy; 2026 Skill Swap Platform. All rights reserved.</p>
     </footer>
 
     <script src="api-client.js?v=20260319"></script>
