@@ -43,8 +43,11 @@ function isPrivateOrLocalHost(hostname) {
         || /^172\.(1[6-9]|2\d|3[0-1])\./.test(hostname);
 }
 
-// Production backend used by the deployed Vercel/PWA frontend.
-const DEPLOYED_BACKEND_BASE = 'https://skillswapplat.onrender.com';
+// Production backends used by the deployed Vercel/PWA frontend.
+const DEPLOYED_BACKEND_BASES = [
+    'https://skillswapplat-1.onrender.com',
+    'https://skillswapplat.onrender.com'
+];
 const API_REQUEST_TIMEOUT_MS = 15000;
 
 const API_BASE_CANDIDATES = (() => {
@@ -66,9 +69,9 @@ const API_BASE_CANDIDATES = (() => {
         addCandidate(override);
     }
 
-    // When running from a public host (Vercel/custom domain), prefer deployed backend.
+    // When running from a public host (Vercel/custom domain), prefer deployed backends.
     if (isPublicHost) {
-        addCandidate(DEPLOYED_BACKEND_BASE);
+        DEPLOYED_BACKEND_BASES.forEach(addCandidate);
     }
 
     if (protocol === 'file:' || !hostname) {
