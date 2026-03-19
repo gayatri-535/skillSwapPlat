@@ -105,9 +105,9 @@
             transform: translateY(-1px);
         }
         #themeToggle {
-            position: fixed;
-            top: max(10px, calc(env(safe-area-inset-top) + 4px));
-            right: max(10px, env(safe-area-inset-right));
+            position: fixed !important;
+            top: max(12px, calc(env(safe-area-inset-top) + 6px));
+            right: max(12px, env(safe-area-inset-right));
             margin-left: 0;
             background-color: var(--button-color);
             color: white;
@@ -117,9 +117,12 @@
             min-height: 42px;
             min-width: 130px;
             cursor: pointer;
-            z-index: 1200;
+            z-index: 1400;
             box-shadow: 0 12px 24px rgba(0, 0, 0, 0.24);
             transition: background-color 0.3s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
         }
         #themeToggle:hover {
             background-color: var(--button-hover);
@@ -443,6 +446,8 @@
         <p>Exchange Your Skills, Learn Something New</p>
     </header>
 
+    <button id="themeToggle" aria-label="Toggle theme"></button>
+
     <nav id="navbar">
         <div class="nav-group nav-group--primary">
             <a href="#home">Home</a>
@@ -450,7 +455,6 @@
             <a href="#how-it-works">How It Works</a>
         </div>
         <div class="nav-group nav-group--secondary" id="navLinks"></div>
-        <button id="themeToggle"></button>
     </nav>
     
 
