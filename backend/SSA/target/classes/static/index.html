@@ -42,21 +42,43 @@
         }
         nav {
             background-color: var(--nav-bg);
-            padding: 15px;
+            padding: 14px 16px;
             text-align: center;
             display: flex;
-            justify-content: space-between;
+            flex-wrap: wrap;
+            justify-content: center;
             align-items: center;
+            gap: 10px 12px;
             transition: background-color 0.3s;
         }
+
+        .nav-group {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-group--primary {
+            flex: 1 1 420px;
+        }
+
+        .nav-group--secondary {
+            flex: 1 1 260px;
+        }
+
         nav a {
             color: white;
             text-decoration: none;
-            padding: 10px 20px;
-            margin: 0 5px;
-            display: inline-block;
+            padding: 10px 16px;
+            margin: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
             border-radius: 10px;
             border: 1px solid transparent;
+            min-height: 42px;
             transition: background 0.3s, transform 0.3s, border-color 0.3s;
         }
         nav a:hover {
@@ -65,17 +87,49 @@
             transform: translateY(-1px);
         }
         #themeToggle {
-            margin-left: auto;
+            margin-left: 0;
             background-color: var(--button-color);
             color: white;
             border: none;
-            padding: 10px 20px;
-            border-radius: 4px;
+            padding: 10px 16px;
+            border-radius: 10px;
+            min-height: 42px;
+            min-width: 130px;
             cursor: pointer;
             transition: background-color 0.3s;
         }
         #themeToggle:hover {
             background-color: var(--button-hover);
+        }
+
+        @media (max-width: 720px) {
+            nav {
+                padding: 12px 10px;
+                gap: 10px;
+            }
+
+            .nav-group--primary,
+            .nav-group--secondary {
+                width: min(100%, 420px);
+                flex: 1 1 100%;
+                display: grid;
+                grid-template-columns: repeat(2, minmax(120px, 1fr));
+                gap: 10px;
+            }
+
+            .nav-group--primary a:last-child {
+                grid-column: 1 / -1;
+            }
+
+            nav a,
+            #themeToggle {
+                width: 100%;
+                margin: 0;
+            }
+
+            #themeToggle {
+                width: min(100%, 420px);
+            }
         }
         .container {
             max-width: 1200px;
@@ -220,10 +274,12 @@
     </header>
 
     <nav id="navbar">
-        <a href="#home">Home</a>
-        <a href="#features">Features</a>
-        <a href="#how-it-works">How It Works</a>
-        <span id="navLinks"></span>
+        <div class="nav-group nav-group--primary">
+            <a href="#home">Home</a>
+            <a href="#features">Features</a>
+            <a href="#how-it-works">How It Works</a>
+        </div>
+        <div class="nav-group nav-group--secondary" id="navLinks"></div>
         <button id="themeToggle"></button>
     </nav>
     
