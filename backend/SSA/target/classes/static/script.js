@@ -21,6 +21,10 @@ function resolveApiBase() {
 
 const API_BASE = resolveApiBase();
 const SPLASH_DURATION_MS = 850;
+const INSTALL_DISMISS_KEY = 'skillswap-install-dismissed-at';
+const INSTALL_COOLDOWN_MS = 24 * 60 * 60 * 1000;
+
+let deferredInstallPrompt = null;
 
 async function checkBackendHealth() {
     if (!navigator.onLine) {
@@ -155,10 +159,137 @@ function enableSmoothSectionNav() {
     });
 }
 
+function isStandaloneMode() {
+    return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+}
+
+function isIosSafari() {
+    const ua = window.navigator.userAgent.toLowerCase();
+    const isIos = /iphone|ipad|ipod/.test(ua);
+    const isSafari = /safari/.test(ua) && !/crios|fxios|edgios|opr\//.test(ua);
+    return isIos && isSafari;
+}
+
+function wasInstallBannerDismissedRecently() {
+    const lastDismissed = Number(window.localStorage.getItem(INSTALL_DISMISS_KEY) || '0');
+    if (!lastDismissed) {
+        return false;
+    }
+    return Date.now() - lastDismissed < INSTALL_COOLDOWN_MS;
+}
+
+function ensureInstallBannerElement() {
+    let banner = document.getElementById('pwaInstallBanner');
+    if (banner) {
+        return banner;
+    }
+
+    banner = document.createElement('div');
+    banner.id = 'pwaInstallBanner';
+    banner.className = 'install-banner';
+    document.body.appendChild(banner);
+    return banner;
+}
+
+function hideInstallBanner() {
+    const banner = document.getElementById('pwaInstallBanner');
+    if (!banner) {
+        return;
+    }
+    banner.classList.remove('install-banner--show');
+    window.setTimeout(() => {
+        banner.remove();
+    }, 220);
+}
+
+function markInstallBannerDismissed() {
+    window.localStorage.setItem(INSTALL_DISMISS_KEY, String(Date.now()));
+}
+
+function showInstallBanner(options = {}) {
+    if (isStandaloneMode() || wasInstallBannerDismissedRecently()) {
+        return;
+    }
+
+    const { iosHint = false } = options;
+    const banner = ensureInstallBannerElement();
+
+    if (iosHint) {
+        banner.innerHTML = `
+            <div class="install-banner__text">Install SkillSwap: tap <strong>Share</strong> and choose <strong>Add to Home Screen</strong>.</div>
+            <div class="install-banner__actions">
+                <button type="button" class="install-banner__btn install-banner__btn--ghost" id="installDismissBtn">Got it</button>
+            </div>
+        `;
+    } else {
+        banner.innerHTML = `
+            <div class="install-banner__text">Install SkillSwap for faster access and app-like full-screen mode.</div>
+            <div class="install-banner__actions">
+                <button type="button" class="install-banner__btn" id="installNowBtn">Install</button>
+                <button type="button" class="install-banner__btn install-banner__btn--ghost" id="installDismissBtn">Later</button>
+            </div>
+        `;
+
+        const installNowBtn = banner.querySelector('#installNowBtn');
+        if (installNowBtn) {
+            installNowBtn.addEventListener('click', async () => {
+                if (!deferredInstallPrompt) {
+                    return;
+                }
+
+                deferredInstallPrompt.prompt();
+                const choice = await deferredInstallPrompt.userChoice;
+                deferredInstallPrompt = null;
+
+                if (choice.outcome === 'accepted') {
+                    window.localStorage.removeItem(INSTALL_DISMISS_KEY);
+                    hideInstallBanner();
+                } else {
+                    markInstallBannerDismissed();
+                    hideInstallBanner();
+                }
+            });
+        }
+    }
+
+    const dismissBtn = banner.querySelector('#installDismissBtn');
+    if (dismissBtn) {
+        dismissBtn.addEventListener('click', () => {
+            markInstallBannerDismissed();
+            hideInstallBanner();
+        });
+    }
+
+    window.requestAnimationFrame(() => {
+        banner.classList.add('install-banner--show');
+    });
+}
+
+function setupInstallExperience() {
+    window.addEventListener('beforeinstallprompt', (event) => {
+        event.preventDefault();
+        deferredInstallPrompt = event;
+        showInstallBanner();
+    });
+
+    window.addEventListener('appinstalled', () => {
+        deferredInstallPrompt = null;
+        window.localStorage.removeItem(INSTALL_DISMISS_KEY);
+        hideInstallBanner();
+    });
+
+    if (isIosSafari() && !isStandaloneMode()) {
+        window.setTimeout(() => {
+            showInstallBanner({ iosHint: true });
+        }, 1200);
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     showStartupSplash();
     enhancePasswordFields();
     wireThemeObserver();
     enableSmoothSectionNav();
+    setupInstallExperience();
     checkBackendHealth();
 });

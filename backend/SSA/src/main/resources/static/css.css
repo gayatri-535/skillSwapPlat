@@ -444,6 +444,71 @@ footer {
     opacity: 0.88;
 }
 
+.install-banner {
+    position: fixed;
+    left: 12px;
+    right: 12px;
+    bottom: max(12px, calc(env(safe-area-inset-bottom) + 8px));
+    z-index: 1600;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    box-shadow: 0 14px 30px var(--shadow-color);
+    opacity: 0;
+    transform: translateY(14px);
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.install-banner--show {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+.install-banner__text {
+    font-size: 0.9rem;
+    line-height: 1.35;
+    font-weight: 600;
+}
+
+.install-banner__actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 0 0 auto;
+}
+
+button.install-banner__btn {
+    margin: 0;
+    padding: 8px 12px;
+    min-height: 36px;
+    border-radius: 9px;
+    box-shadow: none;
+    font-size: 0.84rem;
+    font-weight: 700;
+}
+
+button.install-banner__btn--ghost {
+    background: transparent;
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+button.install-banner__btn--ghost:hover {
+    background: rgba(15, 118, 110, 0.1);
+    color: var(--text-primary);
+    border-color: var(--button-color);
+    transform: none;
+    box-shadow: none;
+}
+
 @media (max-width: 720px) {
     nav {
         justify-content: center;
@@ -458,5 +523,21 @@ footer {
         margin: 14px auto;
         padding: 16px;
         border-radius: 16px;
+    }
+
+    .install-banner {
+        left: 10px;
+        right: 10px;
+        gap: 10px;
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .install-banner__actions {
+        width: 100%;
+    }
+
+    button.install-banner__btn {
+        flex: 1 1 auto;
     }
 }
