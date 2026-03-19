@@ -5,46 +5,39 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Swap Requests - Skill Swap Platform</title>
     <link rel="manifest" href="/manifest.json">
-    <meta name="theme-color" content="#6200EE">
+    <meta name="theme-color" content="#0f766e">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="SkillSwap">
     <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
     <link rel="stylesheet" href="css.css">
+    <script src="theme.js"></script>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            max-width: 1000px;
-            margin: 20px auto;
-            padding: 20px;
-            background-color: #f5f5f5;
+            max-width: none;
+            margin: 0;
+            padding: 18px 14px 30px;
         }
         .container {
-            background: white;
+            max-width: 1020px;
+            margin: 24px auto;
             padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
         h2 {
-            color: #333;
+            color: var(--text-primary);
+            margin-bottom: 8px;
         }
         .tabs {
             display: flex;
             gap: 10px;
             margin: 20px 0;
-            border-bottom: 2px solid #ddd;
+            border-bottom: 1px solid var(--border-color);
         }
         .tab-btn {
-            padding: 10px 20px;
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 16px;
-            color: #666;
-            border-bottom: 3px solid transparent;
+            font-size: 15px;
         }
         .tab-btn.active {
-            color: #4CAF50;
-            border-bottom-color: #4CAF50;
+            color: #fff;
+            border-bottom-color: transparent;
         }
         .tab-content {
             display: none;
@@ -53,106 +46,95 @@
             display: block;
         }
         .form-section {
-            background: #f9f9f9;
+            background: var(--bg-elevated);
             padding: 20px;
-            border-radius: 4px;
+            border-radius: 14px;
             margin-bottom: 20px;
+            border: 1px solid var(--border-color);
         }
         input, select, textarea {
             width: 100%;
-            padding: 10px;
-            margin: 8px 0;
-            border: 1px solid #ddd;
-            border-radius: 4px;
             box-sizing: border-box;
             font-size: 14px;
         }
         button {
-            padding: 12px 20px;
-            margin: 10px 5px 10px 0;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-        button:hover {
-            background-color: #45a049;
+            margin: 10px 8px 10px 0;
         }
         .swap-card {
-            background: #f9f9f9;
+            background: var(--bg-elevated);
             padding: 15px;
             margin: 10px 0;
-            border-radius: 4px;
-            border-left: 4px solid #4CAF50;
+            border-radius: 12px;
+            border-left: 4px solid var(--button-color);
+            border: 1px solid var(--border-color);
         }
         .swap-card h4 {
             margin: 0 0 10px 0;
-            color: #333;
+            color: var(--text-primary);
         }
         .swap-info {
             margin: 5px 0;
-            color: #666;
+            color: var(--text-secondary);
         }
         .swap-info strong {
-            color: #333;
+            color: var(--text-primary);
         }
         .swap-actions {
             margin-top: 10px;
         }
         .accept-btn {
-            background-color: #2196F3;
+            background-color: var(--button-secondary);
         }
         .accept-btn:hover {
-            background-color: #0b7dda;
+            background-color: var(--button-secondary-hover);
         }
         .cancel-btn {
-            background-color: #f44336;
+            background-color: #dc2626;
         }
         .cancel-btn:hover {
-            background-color: #da190b;
+            background-color: #b91c1c;
         }
         .message {
             margin: 15px 0;
-            padding: 10px;
-            border-radius: 4px;
             text-align: center;
         }
         .success {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
+            border-left: none;
         }
         .error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
+            border-left: none;
         }
         .empty-state {
             text-align: center;
             padding: 40px;
-            color: #999;
+            color: var(--text-secondary);
         }
         .nav-links {
             text-align: center;
             margin: 20px 0;
+            line-height: 1.8;
         }
         .nav-links a {
-            color: #4CAF50;
+            color: var(--button-color);
             text-decoration: none;
             margin: 0 10px;
         }
     </style>
 </head>
 <body>
+    <nav>
+        <a href="index.html">Home</a>
+        <a href="profile.html">My Profile</a>
+        <button id="themeToggle"></button>
+    </nav>
+
     <div class="container">
         <h2>Skill Swap Management</h2>
 
         <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('create')">Create New Swap</button>
-            <button class="tab-btn" onclick="switchTab('browse')">Browse Available Swaps</button>
-            <button class="tab-btn" onclick="switchTab('myrequests')">My Swap Requests</button>
+            <button class="tab-btn active" onclick="switchTab('create', this)">Create New Swap</button>
+            <button class="tab-btn" onclick="switchTab('browse', this)">Browse Available Swaps</button>
+            <button class="tab-btn" onclick="switchTab('myrequests', this)">My Swap Requests</button>
         </div>
 
         <!-- Create Swap Tab -->
@@ -205,14 +187,16 @@
         const user = SkillSwapAPI.getCurrentUser();
         let selectedReceiverId = null;
 
-        function switchTab(tabName) {
+        function switchTab(tabName, clickedButton) {
             // Hide all tabs
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             
             // Show selected tab
             document.getElementById(tabName).classList.add('active');
-            event.target.classList.add('active');
+            if (clickedButton) {
+                clickedButton.classList.add('active');
+            }
 
             // Load data for the tab
             if (tabName === 'browse') {
@@ -362,6 +346,7 @@
             }
         }
     </script>
+    <script src="script.js"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', function () {

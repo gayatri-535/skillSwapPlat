@@ -1,5 +1,5 @@
-// SkillSwap Service Worker v1.1
-const CACHE_NAME = 'skillswap-v3';
+// SkillSwap Service Worker v1.2
+const CACHE_NAME = 'skillswap-v4';
 const OFFLINE_URL = '/offline.html';
 
 // Files to cache for offline use
@@ -7,8 +7,13 @@ const STATIC_ASSETS = [
   '/',
   '/offline.html',
   '/manifest.json',
+  '/css.css',
+  '/script.js',
+  '/theme.js',
   '/icons/icon-192x192.png',
-  '/icons/icon-512x512.png'
+  '/icons/icon-512x512.png',
+  '/icons/icon-maskable-192x192.png',
+  '/icons/icon-maskable-512x512.png'
 ];
 
 // ─── Install: cache static assets ───────────────────────────────────────────
