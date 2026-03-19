@@ -31,6 +31,7 @@
             padding: 20px 0;
             text-align: center;
             transition: background 0.3s;
+            position: relative;
         }
         header h1 {
             font-size: 2.5em;
@@ -105,9 +106,9 @@
             transform: translateY(-1px);
         }
         #themeToggle {
-            position: fixed !important;
-            top: max(12px, calc(env(safe-area-inset-top) + 6px));
-            right: max(12px, env(safe-area-inset-right));
+            position: absolute;
+            top: 12px;
+            right: 12px;
             margin-left: 0;
             background-color: var(--button-color);
             color: white;
@@ -117,7 +118,7 @@
             min-height: 42px;
             min-width: 130px;
             cursor: pointer;
-            z-index: 1400;
+            z-index: 10;
             box-shadow: 0 12px 24px rgba(0, 0, 0, 0.24);
             transition: background-color 0.3s;
             display: inline-flex;
@@ -148,8 +149,8 @@
             }
 
             #themeToggle {
-                top: max(8px, calc(env(safe-area-inset-top) + 4px));
-                right: max(8px, env(safe-area-inset-right));
+                top: 8px;
+                right: 8px;
                 min-width: 44px;
                 width: 44px;
                 min-height: 44px;
@@ -444,9 +445,8 @@
     <header>
         <h1>Skill Swap Platform</h1>
         <p>Exchange Your Skills, Learn Something New</p>
+        <button id="themeToggle" aria-label="Toggle theme"></button>
     </header>
-
-    <button id="themeToggle" aria-label="Toggle theme"></button>
 
     <nav id="navbar">
         <div class="nav-group nav-group--primary">
