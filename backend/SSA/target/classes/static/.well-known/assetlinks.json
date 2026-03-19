@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.skillswap.platform",
+      "sha256_cert_fingerprints": [
+        "B4086F403D2EBCF4A54E4C17F973C088C9E865342DB69BA20B2CB897B08DBB8C"
+      ]
+    }
+  }
+]

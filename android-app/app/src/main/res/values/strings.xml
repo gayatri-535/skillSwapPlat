@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">SkillSwap</string>
+    <string name="app_description">Learn. Teach. Grow. - The skill exchange platform</string>
+    <string name="brand_color">#6200EE</string>
+    <string name="twa_url">https://skillswapplat-1.onrender.com/</string>
+</resources>

@@ -26,9 +26,12 @@ public class SkillSwapApp {
                                 "http://[::1]:*",
                                 "http://10.0.2.2:*",
                                 "https://*.vercel.app",
-                                "https://skillswapplat.onrender.com")
+                                "https://skillswapplat.onrender.com",
+                                "https://skillswapplat-1.onrender.com",
+                                "app://com.skillswap.platform")
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
+                        .allowCredentials(true)
                         .maxAge(3600);
             }
         };
