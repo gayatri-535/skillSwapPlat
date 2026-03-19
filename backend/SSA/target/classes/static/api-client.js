@@ -45,10 +45,14 @@ function isPrivateOrLocalHost(hostname) {
 
 // Production backend used by the deployed Vercel/PWA frontend.
 const DEPLOYED_BACKEND_BASE = 'https://skillswapplat.onrender.com';
+const API_REQUEST_TIMEOUT_MS = 15000;
 
 const API_BASE_CANDIDATES = (() => {
     const { protocol, hostname, port, origin } = window.location;
     const candidates = [];
+    const isPublicHost = Boolean(hostname)
+        && !isPrivateOrLocalHost(hostname)
+        && hostname !== '10.0.2.2';
 
     const addCandidate = (value) => {
         const normalized = normalizeApiBaseUrl(value);
@@ -63,7 +67,7 @@ const API_BASE_CANDIDATES = (() => {
     }
 
     // When running from a public host (Vercel/custom domain), prefer deployed backend.
-    if (hostname && !isPrivateOrLocalHost(hostname) && hostname !== '10.0.2.2') {
+    if (isPublicHost) {
         addCandidate(DEPLOYED_BACKEND_BASE);
     }
 
@@ -83,19 +87,21 @@ const API_BASE_CANDIDATES = (() => {
     // Default same-origin API first.
     addCandidate(origin);
 
-    // If frontend runs on any non-8080 port, try backend on same host:8080.
-    if (port && port !== '8080') {
-        addCandidate(sameHost8080);
-    }
+    if (!isPublicHost) {
+        // If frontend runs on any non-8080 port, try backend on same host:8080.
+        if (port && port !== '8080') {
+            addCandidate(sameHost8080);
+        }
 
-    // If opened from a local/private host without explicit port, keep 8080 fallback.
-    if (!port && isPrivateOrLocalHost(hostname)) {
-        addCandidate(sameHost8080);
-    }
+        // If opened from a local/private host without explicit port, keep 8080 fallback.
+        if (!port && isPrivateOrLocalHost(hostname)) {
+            addCandidate(sameHost8080);
+        }
 
-    // Last-resort local machine fallbacks.
-    addCandidate('http://localhost:8080');
-    addCandidate('http://127.0.0.1:8080');
+        // Last-resort local machine fallbacks.
+        addCandidate('http://localhost:8080');
+        addCandidate('http://127.0.0.1:8080');
+    }
 
     return candidates;
 })();
@@ -108,14 +114,21 @@ async function apiFetch(path, options = {}) {
 
     for (let i = 0; i < API_BASE_CANDIDATES.length; i++) {
         const base = API_BASE_CANDIDATES[i];
-        try {
-            const response = await fetch(`${base}${endpointPath}`, options);
+        const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+        const timeoutId = controller
+            ? setTimeout(() => controller.abort(), API_REQUEST_TIMEOUT_MS)
+            : null;
 
-            const contentType = (response.headers.get('content-type') || '').toLowerCase();
+        try {
+            const requestOptions = controller
+                ? { ...options, signal: controller.signal }
+                : options;
+
+            const response = await fetch(`${base}${endpointPath}`, requestOptions);
+
             const shouldFallback = (
                 i < API_BASE_CANDIDATES.length - 1
                 && response.status === 404
-                && contentType.includes('text/html')
             );
 
             if (shouldFallback) {
@@ -124,7 +137,15 @@ async function apiFetch(path, options = {}) {
 
             return response;
         } catch (error) {
-            lastError = error;
+            if (error && error.name === 'AbortError') {
+                lastError = new Error(`API request timed out after ${API_REQUEST_TIMEOUT_MS / 1000}s`);
+            } else {
+                lastError = error;
+            }
+        } finally {
+            if (timeoutId) {
+                clearTimeout(timeoutId);
+            }
         }
     }
 
@@ -334,9 +355,15 @@ class SkillSwapAPI {
 }
 
 // Utility functions
+const loadingTimers = new Map();
+
 function showMessage(elementId, message, isSuccess = true) {
     const element = document.getElementById(elementId);
     if (element) {
+        if (loadingTimers.has(elementId)) {
+            clearTimeout(loadingTimers.get(elementId));
+            loadingTimers.delete(elementId);
+        }
         element.textContent = message;
         element.style.color = isSuccess ? 'green' : 'red';
         element.style.marginTop = '10px';
@@ -346,7 +373,25 @@ function showMessage(elementId, message, isSuccess = true) {
 function showLoading(elementId, show = true) {
     const element = document.getElementById(elementId);
     if (element) {
+        if (loadingTimers.has(elementId)) {
+            clearTimeout(loadingTimers.get(elementId));
+            loadingTimers.delete(elementId);
+        }
+
         element.textContent = show ? 'Loading...' : '';
+
+        if (show) {
+            const timeoutId = setTimeout(() => {
+                if (element.textContent === 'Loading...') {
+                    element.textContent = 'Request timed out. Please try again.';
+                    element.style.color = 'red';
+                    element.style.marginTop = '10px';
+                }
+                loadingTimers.delete(elementId);
+            }, 20000);
+
+            loadingTimers.set(elementId, timeoutId);
+        }
     }
 }
 

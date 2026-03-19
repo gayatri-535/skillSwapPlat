@@ -1,5 +1,5 @@
-// SkillSwap Service Worker v1.0
-const CACHE_NAME = 'skillswap-v2';
+// SkillSwap Service Worker v1.1
+const CACHE_NAME = 'skillswap-v3';
 const OFFLINE_URL = '/offline.html';
 
 // Files to cache for offline use
@@ -64,8 +64,8 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        // Cache successful responses
-        if (response && response.status === 200) {
+        // Cache only non-navigation responses to avoid stale HTML/app-shell pages.
+        if (response && response.status === 200 && event.request.mode !== 'navigate') {
           const responseClone = response.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseClone));
         }

@@ -13,20 +13,23 @@ public class SkillSwapApp {
         SpringApplication.run(SkillSwapApp.class, args);
     }
 
-    // Enable permissive CORS for local frontend (adjust origins in production)
+    // Allow localhost for development and public hosts used by deployed frontend/PWA.
     @Bean
     public WebMvcConfigurer corsConfigurer() {
         return new WebMvcConfigurer() {
             @Override
             public void addCorsMappings(@NonNull CorsRegistry registry) {
-                registry.addMapping("/**")
+                registry.addMapping("/api/**")
                         .allowedOriginPatterns(
                                 "http://localhost:*",
                                 "http://127.0.0.1:*",
                                 "http://[::1]:*",
-                                "http://10.0.2.2:*")
+                                "http://10.0.2.2:*",
+                                "https://*.vercel.app",
+                                "https://skillswapplat.onrender.com")
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-                        .allowedHeaders("*");
+                        .allowedHeaders("*")
+                        .maxAge(3600);
             }
         };
     }

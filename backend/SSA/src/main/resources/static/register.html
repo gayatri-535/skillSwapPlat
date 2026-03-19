@@ -116,16 +116,24 @@
         </div>
     </div>
 
-    <script src="api-client.js"></script>
+    <script src="api-client.js?v=20260319"></script>
     <script>
+        const REGISTER_TIMEOUT_MS = 20000;
+
         document.getElementById('registerForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const password = document.getElementById('password').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
+            const submitBtn = this.querySelector('button[type="submit"]');
             
             if (password !== confirmPassword) {
                 showMessage('message', 'Passwords do not match!', false);
+                return;
+            }
+
+            if (!navigator.onLine) {
+                showMessage('message', 'You appear to be offline. Please check internet and retry.', false);
                 return;
             }
             
@@ -140,7 +148,35 @@
             };
             
             showLoading('message', true);
-            const result = await SkillSwapAPI.register(userData);
+            if (submitBtn) {
+                submitBtn.disabled = true;
+            }
+
+            let result;
+            try {
+                const timeoutResult = new Promise((resolve) => {
+                    setTimeout(() => {
+                        resolve({
+                            success: false,
+                            error: 'Registration timed out. Please retry in a moment.'
+                        });
+                    }, REGISTER_TIMEOUT_MS);
+                });
+
+                result = await Promise.race([
+                    SkillSwapAPI.register(userData),
+                    timeoutResult
+                ]);
+            } catch (error) {
+                result = {
+                    success: false,
+                    error: 'Registration failed. Please try again.'
+                };
+            } finally {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                }
+            }
             
             if (result.success) {
                 const messageEl = document.getElementById('message');
@@ -156,9 +192,12 @@
                 const rawMessage = result.message || result.error || '';
                 const looksLikeWrongServer = typeof rawMessage === 'string'
                     && /not_found|page could not be found/i.test(rawMessage);
+                const isPublicHost = !/^(localhost|127\.0\.0\.1|::1|\[::1\]|10\.0\.2\.2)$/.test(window.location.hostname);
 
                 if (looksLikeWrongServer) {
-                    messageEl.textContent = 'Cannot reach SkillSwap backend API from this page. Open the app from http://localhost:8080 (or your PC IP on port 8080).';
+                    messageEl.textContent = isPublicHost
+                        ? 'Cannot reach SkillSwap backend API from this page. Please wait a minute for Render to wake up, then retry registration.'
+                        : 'Cannot reach SkillSwap backend API from this page. Open the app from http://localhost:8080 (or your PC IP on port 8080).';
                 } else {
                     messageEl.textContent = rawMessage || 'Registration failed. Please try again.';
                 }
