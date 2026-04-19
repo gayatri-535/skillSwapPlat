@@ -27,7 +27,6 @@ public class UserService {
             }
             return passwordEncoder.matches(password, user.password);
         } catch (Exception e) {
-            e.printStackTrace();
             return false;
         }
     }
@@ -42,7 +41,6 @@ public class UserService {
             user.password = passwordEncoder.encode(user.password);
             userDao.insertUser(user);
         } catch (Exception e) {
-            e.printStackTrace();
             throw new RuntimeException("Registration failed: " + e.getMessage());
         }
     }
@@ -88,7 +86,7 @@ public class UserService {
 
         // Check if token has expired
         long currentTime = System.currentTimeMillis();
-        if (user.tokenExpiry != null && currentTime > user.tokenExpiry) {
+        if (user.tokenExpiry <= 0L || currentTime > user.tokenExpiry) {
             return false; // Token expired
         }
 

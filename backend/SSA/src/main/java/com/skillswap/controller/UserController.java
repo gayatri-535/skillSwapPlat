@@ -23,7 +23,7 @@ public class UserController {
     private UserService userService;
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestParam String email, @RequestParam String password) {
+    public ResponseEntity<?> login(@RequestParam("email") String email, @RequestParam("password") String password) {
         try {
             boolean ok = userService.authenticate(email, password);
             if (ok) {
@@ -64,7 +64,6 @@ public class UserController {
             List<User> users = userService.listAllUsers();
             return ResponseEntity.ok(users);
         } catch (Exception e) {
-            e.printStackTrace();
             return ResponseEntity.status(500).body((List<User>)null);
         }
     }
@@ -85,7 +84,7 @@ public class UserController {
     }
 
     @PostMapping("/forgot-password")
-    public ResponseEntity<?> forgotPassword(@RequestParam String email) {
+    public ResponseEntity<?> forgotPassword(@RequestParam("email") String email) {
         try {
             if (email == null || email.isEmpty()) {
                 return ResponseEntity.badRequest().body("Email is required");
@@ -104,7 +103,7 @@ public class UserController {
     }
 
     @PostMapping("/validate-reset-token")
-    public ResponseEntity<?> validateResetToken(@RequestParam String token) {
+    public ResponseEntity<?> validateResetToken(@RequestParam("token") String token) {
         try {
             if (token == null || token.isEmpty()) {
                 return ResponseEntity.badRequest().body("Token is required");
@@ -123,7 +122,7 @@ public class UserController {
     }
 
     @PostMapping("/reset-password")
-    public ResponseEntity<?> resetPassword(@RequestParam String token, @RequestParam String newPassword) {
+    public ResponseEntity<?> resetPassword(@RequestParam("token") String token, @RequestParam("newPassword") String newPassword) {
         try {
             if (token == null || token.isEmpty()) {
                 return ResponseEntity.badRequest().body("Token is required");

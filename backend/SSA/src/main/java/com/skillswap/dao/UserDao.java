@@ -33,13 +33,14 @@ public class UserDao {
 
     public void insertUser(User user) {
         String sql = "INSERT INTO users (name, email, password_hash, location, availability, is_public, is_banned) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        boolean isPublic = user.isPublic == null || user.isPublic;
         jdbcTemplate.update(sql, 
             user.name, 
             user.email, 
             user.password, 
             user.location != null ? user.location : "", 
             user.availability != null ? user.availability : "", 
-            user.isPublic != false ? user.isPublic : true,  // Default to true (public)
+            isPublic,
             false  // Default to false (not banned)
         );
     }
@@ -84,7 +85,8 @@ public class UserDao {
             user.isPublic = rs.getBoolean("is_public");
             user.isBanned = rs.getBoolean("is_banned");
             user.resetToken = rs.getString("reset_token");
-            user.tokenExpiry = rs.getLong("token_expiry");
+            long tokenExpiryValue = rs.getLong("token_expiry");
+            user.tokenExpiry = rs.wasNull() ? 0L : tokenExpiryValue;
             return user;
         }, token);
         return users.isEmpty() ? null : users.get(0);

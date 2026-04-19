@@ -21,7 +21,6 @@ public class SwapService {
             }
             swapDao.createSwap(request);
         } catch (Exception e) {
-            e.printStackTrace();
             throw new RuntimeException("Failed to create swap: " + e.getMessage());
         }
     }
@@ -46,7 +45,6 @@ public class SwapService {
             }
             swapDao.updateStatus(requestId, "accepted");
         } catch (Exception e) {
-            e.printStackTrace();
             throw new RuntimeException("Failed to accept swap: " + e.getMessage());
         }
     }
@@ -59,7 +57,6 @@ public class SwapService {
             }
             swapDao.cancelSwap(requestId);
         } catch (Exception e) {
-            e.printStackTrace();
             throw new RuntimeException("Failed to cancel swap: " + e.getMessage());
         }
     }

@@ -48,7 +48,7 @@ const DEPLOYED_BACKEND_BASES = [
     'https://skillswapplat-1.onrender.com',
     'https://skillswapplat.onrender.com'
 ];
-const API_REQUEST_TIMEOUT_MS = 15000;
+const API_REQUEST_TIMEOUT_MS = 25000;
 
 const API_BASE_CANDIDATES = (() => {
     const { protocol, hostname, port, origin } = window.location;
@@ -56,6 +56,7 @@ const API_BASE_CANDIDATES = (() => {
     const isPublicHost = Boolean(hostname)
         && !isPrivateOrLocalHost(hostname)
         && hostname !== '10.0.2.2';
+    const isRenderHost = /\.onrender\.com$/i.test(hostname);
 
     const addCandidate = (value) => {
         const normalized = normalizeApiBaseUrl(value);
@@ -87,8 +88,10 @@ const API_BASE_CANDIDATES = (() => {
     const normalizedHost = normalizeHostForUrl(hostname);
     const sameHost8080 = `${protocol}//${normalizedHost}:8080`;
 
-    // Default same-origin API first.
-    addCandidate(origin);
+    // On Render-hosted backend pages, same-origin API is valid.
+    if (!isPublicHost || isRenderHost) {
+        addCandidate(origin);
+    }
 
     if (!isPublicHost) {
         // If frontend runs on any non-8080 port, try backend on same host:8080.
