@@ -27,6 +27,24 @@ function getApiBaseOverride() {
     }
 }
 
+function getLastKnownGoodApiBase() {
+    try {
+        return localStorage.getItem('skillswap_last_good_api_base');
+    } catch (e) {
+        return null;
+    }
+}
+
+function setLastKnownGoodApiBase(value) {
+    try {
+        if (value) {
+            localStorage.setItem('skillswap_last_good_api_base', value);
+        }
+    } catch (e) {
+        // Ignore storage failures on restricted/private contexts.
+    }
+}
+
 function normalizeHostForUrl(hostname) {
     return hostname.includes(':') && !hostname.startsWith('[')
         ? `[${hostname}]`
@@ -48,7 +66,8 @@ const DEPLOYED_BACKEND_BASES = [
     'https://skillswapplat-1.onrender.com',
     'https://skillswapplat.onrender.com'
 ];
-const API_REQUEST_TIMEOUT_MS = 25000;
+const API_REQUEST_TIMEOUT_MS = 55000;
+const API_MAX_RETRIES_PER_BASE = 2;
 
 const API_BASE_CANDIDATES = (() => {
     const { protocol, hostname, port, origin } = window.location;
@@ -68,6 +87,11 @@ const API_BASE_CANDIDATES = (() => {
     const override = getApiBaseOverride();
     if (override) {
         addCandidate(override);
+    }
+
+    const lastKnownGood = getLastKnownGoodApiBase();
+    if (lastKnownGood) {
+        addCandidate(lastKnownGood);
     }
 
     // When running from a public host (Vercel/custom domain), prefer deployed backends.
@@ -118,39 +142,49 @@ async function apiFetch(path, options = {}) {
     const endpointPath = path.startsWith('/') ? path : `/${path}`;
     let lastError = null;
 
+    const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
     for (let i = 0; i < API_BASE_CANDIDATES.length; i++) {
         const base = API_BASE_CANDIDATES[i];
-        const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
-        const timeoutId = controller
-            ? setTimeout(() => controller.abort(), API_REQUEST_TIMEOUT_MS)
-            : null;
+        for (let attempt = 1; attempt <= API_MAX_RETRIES_PER_BASE; attempt++) {
+            const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+            const timeoutId = controller
+                ? setTimeout(() => controller.abort(), API_REQUEST_TIMEOUT_MS)
+                : null;
 
-        try {
-            const requestOptions = controller
-                ? { ...options, signal: controller.signal }
-                : options;
+            try {
+                const requestOptions = controller
+                    ? { ...options, signal: controller.signal }
+                    : options;
 
-            const response = await fetch(`${base}${endpointPath}`, requestOptions);
+                const response = await fetch(`${base}${endpointPath}`, requestOptions);
+                setLastKnownGoodApiBase(base);
 
-            const shouldFallback = (
-                i < API_BASE_CANDIDATES.length - 1
-                && response.status === 404
-            );
+                const shouldFallback = (
+                    i < API_BASE_CANDIDATES.length - 1
+                    && response.status === 404
+                );
 
-            if (shouldFallback) {
-                continue;
-            }
+                if (shouldFallback) {
+                    break;
+                }
 
-            return response;
-        } catch (error) {
-            if (error && error.name === 'AbortError') {
-                lastError = new Error(`API request timed out after ${API_REQUEST_TIMEOUT_MS / 1000}s`);
-            } else {
-                lastError = error;
-            }
-        } finally {
-            if (timeoutId) {
-                clearTimeout(timeoutId);
+                return response;
+            } catch (error) {
+                if (error && error.name === 'AbortError') {
+                    lastError = new Error('API request timed out while backend may be waking up. Please retry in 30-60 seconds.');
+                } else {
+                    lastError = error;
+                }
+
+                const hasAnotherAttempt = attempt < API_MAX_RETRIES_PER_BASE;
+                if (hasAnotherAttempt) {
+                    await wait(1200);
+                }
+            } finally {
+                if (timeoutId) {
+                    clearTimeout(timeoutId);
+                }
             }
         }
     }
