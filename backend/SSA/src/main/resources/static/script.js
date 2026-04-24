@@ -2,6 +2,13 @@
 console.log('SkillSwap UI Enhancements Loaded');
 
 function resolveApiBase() {
+    if (window.SkillSwapAPI && typeof window.SkillSwapAPI.getApiCandidates === 'function') {
+        const candidates = window.SkillSwapAPI.getApiCandidates();
+        if (candidates.length > 0) {
+            return candidates[0];
+        }
+    }
+
     const { protocol, hostname, port, origin } = window.location;
 
     if (protocol === 'file:' || !hostname) {
@@ -28,20 +35,76 @@ let deferredInstallPrompt = null;
 
 async function checkBackendHealth() {
     if (!navigator.onLine) {
+        renderBackendStatus(false, 'Offline mode');
         return false;
     }
 
     try {
+        if (window.SkillSwapAPI && typeof window.SkillSwapAPI.probeBackends === 'function') {
+            const probe = await window.SkillSwapAPI.probeBackends();
+            renderBackendStatus(probe.ok, probe.ok ? `Connected: ${probe.base}` : 'Backend unavailable');
+            return probe.ok;
+        }
+
         const response = await fetch(`${API_BASE}/users`, {
             method: 'GET',
             headers: { 'Content-Type': 'application/json' },
             cache: 'no-store'
         });
+        renderBackendStatus(response.ok, response.ok ? `Connected: ${API_BASE}` : 'Backend unavailable');
         console.log('Backend is healthy:', response.ok);
         return response.ok;
     } catch (error) {
         console.warn('Backend not available:', error.message);
+        renderBackendStatus(false, 'Backend unavailable');
         return false;
+    }
+}
+
+function ensureBackendStatusElement() {
+    let status = document.getElementById('backendStatusPill');
+    if (status) {
+        return status;
+    }
+
+    const nav = document.querySelector('nav');
+    if (!nav) {
+        return null;
+    }
+
+    status = document.createElement('span');
+    status.id = 'backendStatusPill';
+    status.style.marginLeft = 'auto';
+    status.style.padding = '6px 10px';
+    status.style.borderRadius = '999px';
+    status.style.fontSize = '12px';
+    status.style.fontWeight = '600';
+    status.style.border = '1px solid var(--border-color)';
+    status.style.background = 'var(--bg-elevated)';
+    status.style.color = 'var(--text-secondary)';
+    status.textContent = 'Checking backend...';
+    nav.appendChild(status);
+    return status;
+}
+
+function renderBackendStatus(isHealthy, message) {
+    const pill = ensureBackendStatusElement();
+    if (!pill) {
+        return;
+    }
+
+    if (isHealthy) {
+        pill.style.background = 'rgba(15, 118, 110, 0.2)';
+        pill.style.borderColor = 'rgba(15, 118, 110, 0.45)';
+        pill.style.color = '#2dd4bf';
+        pill.textContent = 'Backend online';
+        pill.title = message || 'Connected';
+    } else {
+        pill.style.background = 'rgba(239, 68, 68, 0.15)';
+        pill.style.borderColor = 'rgba(239, 68, 68, 0.45)';
+        pill.style.color = '#fda4af';
+        pill.textContent = 'Backend offline';
+        pill.title = message || 'Unavailable';
     }
 }
 

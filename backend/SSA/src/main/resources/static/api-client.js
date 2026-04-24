@@ -392,6 +392,44 @@ class SkillSwapAPI {
     static getCurrentUser() {
         return sessionStorage_user.current;
     }
+
+    static getApiCandidates() {
+        return [...API_BASE_CANDIDATES];
+    }
+
+    static async probeBackends(timeoutMs = 12000) {
+        const endpointPath = '/users';
+
+        for (let i = 0; i < API_BASE_CANDIDATES.length; i++) {
+            const base = API_BASE_CANDIDATES[i];
+            const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+            const timeoutId = controller
+                ? setTimeout(() => controller.abort(), timeoutMs)
+                : null;
+
+            try {
+                const response = await fetch(`${base}${endpointPath}`, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' },
+                    cache: 'no-store',
+                    signal: controller ? controller.signal : undefined
+                });
+
+                if (response.ok) {
+                    setLastKnownGoodApiBase(base);
+                    return { ok: true, base, status: response.status };
+                }
+            } catch (error) {
+                // Try next candidate base.
+            } finally {
+                if (timeoutId) {
+                    clearTimeout(timeoutId);
+                }
+            }
+        }
+
+        return { ok: false, base: null, status: null };
+    }
 }
 
 // Utility functions
@@ -418,20 +456,9 @@ function showLoading(elementId, show = true) {
             loadingTimers.delete(elementId);
         }
 
-        element.textContent = show ? 'Loading...' : '';
-
-        if (show) {
-            const timeoutId = setTimeout(() => {
-                if (element.textContent === 'Loading...') {
-                    element.textContent = 'Request timed out. Please try again.';
-                    element.style.color = 'red';
-                    element.style.marginTop = '10px';
-                }
-                loadingTimers.delete(elementId);
-            }, 20000);
-
-            loadingTimers.set(elementId, timeoutId);
-        }
+        element.textContent = show ? 'Connecting to server...' : '';
+        element.style.color = show ? 'inherit' : element.style.color;
+        element.style.marginTop = show ? '10px' : element.style.marginTop;
     }
 }
 
