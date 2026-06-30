@@ -20,6 +20,9 @@ CONTACT EMAIL-:gg08032222@gmail.com
 
 # Then open your browser:
 # http://localhost:5500
+
+To visit this application,got to:
+https://skill-swap-plat.vercel.app
 ```
 
 **That's it!** You now have:
